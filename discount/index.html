@@ -1,1 +1,525 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>เครื่องคิดส่วนลดค่าน้ำ HEA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: two-column tool — inputs on the left, result + meter gauge on the right; stacks on phones.
+   Colours and type follow the HEA design system (Navy / Aqua, Prompt). */
+:root{
+  --bg:#f7f9fb; --surface:#ffffff; --sunk:#f7f9fb; --line:#dce2ea; --line-strong:#c3ccd8;
+  --fg:#1c1c1e; --heading:#2a3d7a; --muted:#4a5160; --muted-3:#5f6675;
+  --accent:#3c549a; --on-accent:#ffffff; --accent-soft:#c1e7f2; --on-soft:#2a3d7a; --soft-line:#a8d6e4;
+  --good:#1e7d45; --good-soft:#e7f4ec; --warn:#5c3a00; --warn-soft:#fff4e0;
+  --t0:#b9c2cf; --t1:#7bccdf; --t2:#4f8fc0; --t3:#3c549a; --t4:#2a3d7a;
+  --t0fg:#2a3d7a; --t1fg:#1c1c1e; --tNfg:#ffffff;
+  --f-body:"Prompt",system-ui,"Leelawadee UI","Tahoma",sans-serif;
+  --f-num:"Prompt",system-ui,"Leelawadee UI","Tahoma",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1628; --surface:#16213a; --sunk:#0e1628; --line:#2a3754; --line-strong:#3a4a6c;
+  --fg:#e8eef8; --heading:#c1e7f2; --muted:#b4c0d6; --muted-3:#9aa7c0;
+  --accent:#7bccdf; --on-accent:#16213a; --accent-soft:#17384a; --on-soft:#c1e7f2; --soft-line:#2b5a70;
+  --good:#5cc48f; --good-soft:#12301f; --warn:#f3d9a8; --warn-soft:#3a2a10;
+  --t0:#55627c; --t1:#3f7fae; --t2:#5fa8cf; --t3:#9dc9ea; --t4:#d7e9f7;
+  --t0fg:#e8eef8; --t1fg:#ffffff; --tNfg:#0e1628;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0e1628; --surface:#16213a; --sunk:#0e1628; --line:#2a3754; --line-strong:#3a4a6c;
+  --fg:#e8eef8; --heading:#c1e7f2; --muted:#b4c0d6; --muted-3:#9aa7c0;
+  --accent:#7bccdf; --on-accent:#16213a; --accent-soft:#17384a; --on-soft:#c1e7f2; --soft-line:#2b5a70;
+  --good:#5cc48f; --good-soft:#12301f; --warn:#f3d9a8; --warn-soft:#3a2a10;
+  --t0:#55627c; --t1:#3f7fae; --t2:#5fa8cf; --t3:#9dc9ea; --t4:#d7e9f7;
+  --t0fg:#e8eef8; --t1fg:#ffffff; --tNfg:#0e1628;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;font-variant-numeric:tabular-nums;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 24px}
+h1{font-size:1.75rem;font-weight:600;line-height:1.35;margin:0;text-wrap:balance;color:var(--heading)}
+.sub{color:var(--muted);margin:2px 0 0;font-size:.92rem}
+.chip{font-size:.78rem;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--on-soft);border:1px solid var(--soft-line);font-weight:500;white-space:nowrap}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.label{font-size:.85rem;color:var(--muted);font-weight:500}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:500;font-size:.93rem;color:var(--muted)}
+select,input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px;width:100%}
+input[type=number]{font-family:var(--f-num);font-size:1.05rem}
+#usage{font-size:1.6rem;font-weight:600;padding:12px 14px}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hint{color:var(--muted);font-size:.82rem}
+.cust{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.86rem}
+.cust dt{color:var(--muted)} .cust dd{margin:0;font-family:var(--f-num);font-size:.84rem;overflow-wrap:anywhere}
+.cust dd.th{font-family:var(--f-body)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick{display:flex;flex-wrap:wrap;gap:6px}
+.quick button{font:inherit;font-size:.8rem;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:999px;padding:4px 10px;cursor:pointer}
+.quick button:hover{background:var(--accent-soft);color:var(--on-soft)}
+/* result */
+.hero{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between}
+.big{font-family:var(--f-num);font-size:2.4rem;font-weight:600;line-height:1.25;color:var(--heading);font-variant-numeric:tabular-nums}
+.big small{font-size:1rem;color:var(--muted);font-weight:500;margin-left:6px;font-family:var(--f-body)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.88rem;padding:4px 12px;border-radius:999px}
+.pill.on{background:var(--good-soft);color:var(--good)} .pill.off{background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
+.nudge{background:var(--accent-soft);color:var(--on-soft);border:1px solid var(--soft-line);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.nudge b{font-family:var(--f-num)}
+/* gauge */
+.gauge{display:flex;flex-direction:column;gap:6px}
+.bar{position:relative;height:30px;border-radius:6px;overflow:hidden;display:flex;background:var(--t0)}
+.seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;color:var(--tNfg);border-right:2px solid var(--surface)}
+.seg:last-child{border-right:0}
+.seg.s0{background:var(--t0);color:var(--t0fg)} .seg.s1{background:var(--t1)} .seg.s2{background:var(--t2)} .seg.s3{background:var(--t3)} .seg.s4{background:var(--t4)}
+.seg.s1{color:var(--t1fg)}
+.needle{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--fg);border-radius:2px;transition:left .25s}
+@media (prefers-reduced-motion:reduce){.needle{transition:none}}
+.ticks{position:relative;height:30px;font-family:var(--f-num);font-size:.7rem;color:var(--muted)}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap;text-align:center;line-height:1.25}
+.ticks span:first-child{transform:none}
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.8rem;color:var(--heading);font-weight:600;border-bottom:1px solid var(--line-strong)}
+td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+tr.hit td{background:var(--accent-soft);color:var(--on-soft);font-weight:500}
+tr.total td{font-weight:600;border-bottom:0;border-top:1px solid var(--line-strong);color:var(--heading)}
+tr.minus td.n{color:var(--good)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:640px){.cols{grid-template-columns:minmax(0,1fr)}}
+h2{font-size:1.05rem;line-height:1.35;margin:0;font-weight:600;color:var(--heading)}
+.compare{font-size:.84rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.compare b{font-family:var(--f-num);color:var(--fg)}
+.why{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:16px}
+.step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:start}
+.step .no{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--f-num)}
+.step .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.st{font-weight:600;font-size:.92rem}
+.eq{font-family:var(--f-num);font-size:1rem;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px 12px;line-height:1.8;overflow-wrap:anywhere}
+.eq .lbl{font-family:var(--f-body);font-size:.78rem;color:var(--muted)}
+.eq .res{color:var(--good);font-weight:600}
+.eq .key{background:var(--accent-soft);color:var(--on-soft);font-weight:600;padding:1px 6px;border-radius:4px}
+#steps tr.sum td{font-weight:700;border-top:2px solid var(--line)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:600;border:0;border-radius:8px;padding:10px 16px;background:var(--accent);color:var(--surface);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+#copied{font-size:.85rem;color:var(--good)}
+textarea{width:100%;font:inherit;font-size:.85rem;background:var(--sunk);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:120px}
+.notes{font-size:.84rem;color:var(--muted)}
+.notes ul{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.notes b{color:var(--fg);font-weight:600}
+.mono{font-family:var(--f-num)}
 
+:root[data-theme="light"]{color-scheme:light}
+[hidden]{display:none!important}
+html,body{margin:0}
+.topbar{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;max-width:1120px;margin:0 auto 12px}
+.userbar{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);margin-right:auto}
+.userbar button{font:inherit;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);padding:4px 12px;border-radius:999px;cursor:pointer}
+.themeseg{display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);padding:2px;gap:2px}
+.themeseg button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--muted);padding:5px 12px;border-radius:999px;cursor:pointer}
+.themeseg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.lock{min-height:75vh;display:grid;place-items:center}
+.lock form{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:28px;width:min(100%,380px);display:flex;flex-direction:column;gap:12px}
+.lock .brand{background:#3c549a;color:#fff;border-radius:8px;padding:10px 14px;font-weight:600;font-size:.9rem}
+.lock h1{font-size:1.4rem}
+.lock p{margin:0;color:var(--muted);font-size:.87rem;line-height:1.6}
+.lock button{font:inherit;font-weight:500;padding:10px 12px;border:0;border-radius:8px;background:var(--accent);color:var(--on-accent);cursor:pointer}
+.lock button:disabled{opacity:.6;cursor:progress}
+.lock button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.lock .err{color:#b42318;min-height:1.2em}
+:root[data-theme="dark"] .lock .err{color:#ef6b5c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lock .err{color:#ef6b5c}}
+.foot{max-width:1120px;margin:16px auto 0;color:var(--muted-3);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="userbar" id="userbar" hidden><span id="who"></span><button type="button" id="logout">ออกจากระบบ</button></div><div class="themeseg" role="group" aria-label="โหมดธีม">
+  <button type="button" data-t="auto">อัตโนมัติ</button><button type="button" data-t="light">☀ สว่าง</button><button type="button" data-t="dark">☾ มืด</button>
+</div></div>
+<div class="lock" id="lock">
+  <form id="lockform" onsubmit="return false">
+    <div class="brand">HEA · ฝ่ายขาย</div>
+    <h1>เครื่องคิดส่วนลดค่าน้ำ</h1>
+    <p>ใช้ภายใน บริษัท ไฮโดรเอ็นเตอร์ไพร์ส แอนด์ อะควอดีซายน์ จำกัด · เข้าสู่ระบบด้วยบัญชี Microsoft 365 ของบริษัท</p>
+    <button id="go" type="button" disabled>กำลังตรวจสอบ…</button>
+    <button id="out" type="button" class="ghost" hidden>ออกจากระบบ / ลองบัญชีอื่น</button>
+    <p class="err" id="err" role="alert"></p>
+  </form>
+</div>
+<div id="dash-root" hidden>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>เครื่องคิดส่วนลดค่าน้ำ — โปรน้ำส่วนเกินฐานเดิม</h1>
+      <p class="sub">ตามหนังสือ EX-HEA-CSO-25691109/01–14 · รอบบิลเดือนพฤศจิกายน 2569 · คิดค่าน้ำตามอัตราก้าวหน้า (T3) ใน WMS</p>
+    </div>
+    <span class="chip">ข้อมูลอัตรา WMS ณ 10 พ.ย. 2569</span>
+  </header>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <section class="panel" aria-label="ข้อมูลที่ต้องกรอก">
+      <div class="field">
+        <label for="cust">ลูกค้า</label>
+        <select id="cust"></select>
+      </div>
+
+      <dl class="cust" id="custInfo"></dl>
+
+      <div id="customBox" class="field" hidden>
+        <div class="row2">
+          <div class="field"><label for="cBranch">สาขา</label>
+            <select id="cBranch"><option value="maikhao">ไม้ขาว</option><option value="sakhu">สาคู</option></select></div>
+          <div class="field"><label for="cFee">ค่าบริการมาตร (บาท)</label>
+            <select id="cFee"><option value="50">1" — 50</option><option value="100" selected>2" — 100</option><option value="450">4" — 450</option></select></div>
+        </div>
+        <div class="field"><label for="cBase">ปริมาณน้ำฐานเดิม (ลบ.ม./เดือน)</label>
+          <input id="cBase" type="number" min="0" step="0.01" value="1000"></div>
+      </div>
+
+      <div class="field">
+        <label for="usage">ยอดใช้น้ำรวมเดือนนี้ (ลบ.ม.)</label>
+        <input id="usage" type="number" min="0" step="1" inputmode="decimal">
+        <span class="hint" id="usageHint"></span>
+      </div>
+      <div class="field">
+        <span class="label">ลองตัวเลขที่เกณฑ์แต่ละระดับ</span>
+        <div class="quick" id="quick"></div>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="panel" aria-label="ผลการคำนวณ" aria-live="polite">
+      <div class="hero">
+        <div>
+          <div class="label">ส่วนลดที่ลูกค้าได้รับ (ก่อน VAT)</div>
+          <div class="big" id="disc">0.00<small>บาท</small></div>
+        </div>
+        <span class="pill off" id="tierPill">ยังไม่ถึงเกณฑ์</span>
+      </div>
+
+      <div class="gauge">
+        <div class="bar" id="bar"><div class="needle" id="needle"></div></div>
+        <div class="ticks" id="ticks"></div>
+      </div>
+
+      <div class="nudge" id="nudge" hidden></div>
+
+      <div class="cols">
+        <div>
+          <h2>ใบแจ้งหนี้ (ประมาณการ)</h2>
+          <div class="tbl-wrap"><table id="bill"></table></div>
+        </div>
+        <div>
+          <h2>เกณฑ์ของลูกค้ารายนี้</h2>
+          <div class="tbl-wrap"><table id="tiers"></table></div>
+        </div>
+      </div>
+
+      <div class="why" id="why" aria-label="ที่มาของส่วนลด">
+        <h2>ที่มาของส่วนลด</h2>
+        <div class="step"><div class="no">1</div><div class="body">
+          <div class="st">ค่าน้ำตามอัตราก้าวหน้า WMS (สาขา<span id="wBranch"></span>)</div>
+          <div class="tbl-wrap"><table id="steps"></table></div></div></div>
+        <div class="step"><div class="no">2</div><div class="body">
+          <div class="st">ราคาเฉลี่ยต่อหน่วย = ค่าน้ำทั้งหมด ÷ ปริมาณน้ำทั้งหมด</div>
+          <div class="eq" id="wAvg"></div></div></div>
+        <div class="step"><div class="no">3</div><div class="body">
+          <div class="st">ส่วนลด = น้ำส่วนเกินฐาน × ราคาเฉลี่ย × % ส่วนลด</div>
+          <div class="eq" id="wDisc"></div></div></div>
+        <div class="compare" id="compare"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="copyBtn" type="button">คัดลอกสรุปส่งลูกค้า</button>
+        <span id="copied" hidden>คัดลอกแล้ว</span>
+      </div>
+      <textarea id="summary" aria-label="ข้อความสรุป" readonly hidden></textarea>
+    </section>
+  </div>
+
+  <section class="panel notes" aria-label="วิธีคิด">
+    <h2 style="color:var(--fg)">วิธีคิด</h2>
+    <ul>
+      <li><b>ระดับส่วนลด</b> ดูจากยอดใช้น้ำรวมเทียบฐานเดิม: เพิ่ม ≥10% ลด 30% · ≥20% ลด 40% · ≥40% ลด 50% · ≥50% ลด 60% ใช้อัตราสูงสุดที่ทำได้กับ<b>น้ำส่วนเกินทั้งหมด</b> น้ำส่วนที่ไม่เกินฐานคิดราคาปกติ</li>
+      <li><b>ส่วนลด</b> = ปริมาณน้ำส่วนเกินฐาน × ราคาเฉลี่ยต่อหน่วย × % ส่วนลด · ราคาเฉลี่ย = ค่าน้ำทั้งหมดตามอัตราก้าวหน้า WMS ÷ ปริมาณน้ำทั้งหมด (ปัดทศนิยม 2 ตำแหน่ง) ตามวิธีของฝ่ายกลยุทธ์องค์กร</li>
+      <li><b>อัตรา WMS</b> ไม้ขาว: 18 / 18 / 20 / 24 / 26 / 28 บาท ตั้งแต่ 81 ลบ.ม. ขึ้นไป 28 บาท · สาคู: 21.75 / 25.23 / 27.68 / 27.77 / 28.05 / 28.19 / 27.91 (1,001–2,000) / 27.80 (2,001–3,000) / 27.64 (3,001 ขึ้นไป)</li>
+      <li><b>VAT 7%</b> คิดจาก (ค่าน้ำหลังหักส่วนลด + ค่าบริการมาตร) โดยถือว่าส่วนลดหักจากค่าน้ำก่อน VAT</li>
+      <li>ถ้าราคาเฉลี่ยที่คำนวณได้ต่างจากที่พิมพ์ในตัวอย่างของหนังสือ หน้านี้จะแสดงส่วนลดตามราคาในหนังสือไว้ให้เทียบด้วย</li>
+    </ul>
+  </section>
+</div>
+<p class="foot">ข้อมูลลูกค้าเข้ารหัสไว้ เปิดได้เฉพาะบัญชีที่มีสิทธิ์ · อัตราค่าน้ำจาก WMS ณ 10 พ.ย. 2569</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js"></script>
+<script>
+const TARIFF={
+  maikhao:{name:"ไม้ขาว",steps:[[10,18],[10,18],[10,20],[20,24],[30,26],[20,28],[200,28],[700,28],[Infinity,28]],min:{units:20,price:300}},
+  sakhu:{name:"สาคู",steps:[[30,21.75],[20,25.23],[30,27.68],[20,27.77],[200,28.05],[700,28.19],[1000,27.91],[1000,27.80],[Infinity,27.64]],min:{units:21,price:315}}
+};
+const LEVELS=[{inc:.10,pct:.30},{inc:.20,pct:.40},{inc:.40,pct:.50},{inc:.50,pct:.60}];
+// [doc, name, AR, meter, branch, size, fee, base, letterRate, exampleUsage]
+let CUSTOMERS=[];
+const toCust=r=>({doc:r[0],name:r[1],ar:r[2],meter:r[3],branch:r[4],size:r[5],fee:r[6],base:r[7],letterRate:r[8],example:r[9]});
+
+const r2=x=>Math.round((x+Number.EPSILON)*100)/100;
+const fmt=(x,d=2)=>Number(x).toLocaleString("th-TH",{minimumFractionDigits:d,maximumFractionDigits:d});
+const $=id=>document.getElementById(id);
+
+function waterCharge(units,branch){
+  const t=TARIFF[branch]; if(units<=0) return t.min.price;
+  if(units<=t.min.units) return t.min.price;
+  let left=units,sum=0;
+  for(const [w,p] of t.steps){const u=Math.min(left,w); sum+=r2(u*p); left-=u; if(left<=0)break;}
+  return r2(sum);
+}
+function thresholds(base){return LEVELS.map(l=>({...l,total:r2(base*(1+l.inc)),excess:r2(base*l.inc)}));}
+function levelFor(usage,base){let hit=-1;thresholds(base).forEach((t,i)=>{if(usage>=t.total)hit=i});return hit;}
+function calc(c,usage){
+  const lv=levelFor(usage,c.base), pct=lv>=0?LEVELS[lv].pct:0;
+  const excessU=Math.max(0,r2(usage-c.base));
+  const full=waterCharge(usage,c.branch), baseCharge=waterCharge(c.base,c.branch);
+  const avg=usage>0?r2(full/usage):0;
+  const excessCharge=lv>=0?r2(excessU*avg):0;
+  const disc=r2(excessU*avg*pct);
+  const vatBefore=r2((full+c.fee)*.07), vatAfter=r2((full-disc+c.fee)*.07);
+  return {lv,pct,excessU,full,baseCharge,avg,excessCharge,disc,
+    totalBefore:r2(full+c.fee+vatBefore),totalAfter:r2(full-disc+c.fee+vatAfter),vatBefore,vatAfter,
+    letterDisc:lv>=0?r2(excessU*c.letterRate*pct):0,
+    netPerUnit:excessU>0&&lv>=0?r2(avg*(1-pct)):null};
+}
+
+// ---- UI (runs after the data is unlocked)
+function boot(rows){
+CUSTOMERS=rows.map(toCust);
+
+const sel=$("cust");
+CUSTOMERS.forEach((c,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${c.doc} · ${c.name.replace("บริษัท ","")} (${c.ar})`;sel.appendChild(o)});
+{const o=document.createElement("option");o.value="custom";o.textContent="ลูกค้าอื่น / กำหนดฐานเอง";sel.appendChild(o)}
+
+function current(){
+  if(sel.value==="custom"){
+    return {doc:"–",name:"ลูกค้า (กำหนดเอง)",ar:"–",meter:"–",branch:$("cBranch").value,size:$("cFee").selectedOptions[0].textContent.split(" ")[0],
+      fee:+$("cFee").value,base:Math.max(0,+$("cBase").value||0),letterRate:null,example:null,custom:true};
+  }
+  return CUSTOMERS[+sel.value];
+}
+
+function renderInfo(c){
+  $("customBox").hidden=!c.custom;
+  $("custInfo").innerHTML=c.custom
+   ?`<dt>หมายเหตุ</dt><dd class="th">ใช้สำหรับประเมินเสนอลูกค้ารายใหม่</dd>`
+   :`<dt>หนังสือ</dt><dd>EX-HEA-CSO-25691109/${c.doc}</dd>
+     <dt>ทะเบียน</dt><dd>${c.ar}</dd>
+     <dt>เลขมิเตอร์</dt><dd>${c.meter}</dd>
+     <dt>สาขา</dt><dd class="th">${TARIFF[c.branch].name} · มาตร ${c.size} (ค่าบริการ ${c.fee} บาท)</dd>
+     <dt>ฐานเดิม</dt><dd>${fmt(c.base)} ลบ.ม.</dd>`;
+  const th=thresholds(c.base);
+  $("quick").innerHTML=[`<button type="button" data-u="${Math.round(c.base)}">ฐาน ${fmt(c.base,0)}</button>`]
+    .concat(th.map((t,i)=>`<button type="button" data-u="${Math.ceil(t.total)}">ระดับ ${i+1}: ${fmt(Math.ceil(t.total),0)}</button>`)).join("");
+  $("quick").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("usage").value=b.dataset.u;render()});
+}
+
+function renderGauge(c,usage){
+  const th=thresholds(c.base), max=c.base*1.65, pos=x=>Math.min(100,Math.max(0,(x-c.base*0.9)/(max-c.base*0.9)*100));
+  const edges=[c.base*0.9,...th.map(t=>t.total),max];
+  const labels=["","30%","40%","50%","60%"];
+  let segs="";
+  for(let i=0;i<5;i++){const w=pos(edges[i+1])-pos(edges[i]); segs+=`<div class="seg s${i}" style="width:${w}%">${labels[i]}</div>`;}
+  $("bar").innerHTML=segs+`<div class="needle" id="needle" style="left:calc(${pos(usage)}% - 1.5px)"></div>`;
+  $("ticks").innerHTML=[c.base,...th.map(t=>t.total)].map((v,i)=>`<span style="left:${pos(v)}%">${i===0?"ฐาน":"+"+Math.round(LEVELS[i-1].inc*100)+"%"}<br>${fmt(v,0)}</span>`).join("");
+}
+
+function render(){
+  const c=current(); const usage=Math.max(0,+$("usage").value||0);
+  const R=calc(c,usage);
+  $("disc").innerHTML=`${fmt(R.disc)}<small>บาท</small>`;
+  const pill=$("tierPill");
+  if(R.lv>=0){pill.className="pill on";pill.textContent=`ระดับ ${R.lv+1} · ลด ${R.pct*100}% ของค่าน้ำส่วนเกิน`}
+  else{pill.className="pill off";pill.textContent="ยังไม่ถึงเกณฑ์ส่วนลด"}
+  $("usageHint").textContent=c.base>0?`เกินฐานเดิม ${fmt(R.excessU)} ลบ.ม. (${usage>=c.base?"+":""}${fmt((usage-c.base)/c.base*100,1)}%)`:"";
+  renderGauge(c,usage);
+
+  // nudge to next level
+  const th=thresholds(c.base), next=th[R.lv+1], nd=$("nudge");
+  if(next){
+    const need=Math.max(0,r2(next.total-usage));
+    const atNext=calc(c,Math.ceil(next.total));
+    nd.hidden=false;
+    nd.innerHTML=`ใช้น้ำเพิ่มอีก <b>${fmt(need)}</b> ลบ.ม. (รวม ${fmt(next.total)} ลบ.ม.) จะได้ส่วนลด ${next.pct*100}% — ประมาณ <b>${fmt(atNext.disc)}</b> บาท`;
+  } else nd.hidden=true;
+
+  $("bill").innerHTML=`
+    <tr><th>รายการ</th><th>ปกติ</th><th>หลังส่วนลด</th></tr>
+    <tr><td>ค่าน้ำ ${fmt(usage,usage%1?2:0)} ลบ.ม.</td><td class="n">${fmt(R.full)}</td><td class="n">${fmt(R.full)}</td></tr>
+    <tr class="minus"><td>ส่วนลดน้ำส่วนเกิน</td><td class="n">–</td><td class="n">−${fmt(R.disc)}</td></tr>
+    <tr><td>ค่าบริการมาตร ${c.size}</td><td class="n">${fmt(c.fee)}</td><td class="n">${fmt(c.fee)}</td></tr>
+    <tr><td>VAT 7%</td><td class="n">${fmt(R.vatBefore)}</td><td class="n">${fmt(R.vatAfter)}</td></tr>
+    <tr class="total"><td>รวมชำระ</td><td class="n">${fmt(R.totalBefore)}</td><td class="n">${fmt(R.totalAfter)}</td></tr>`;
+
+  $("steps").innerHTML=stepRows(usage,c.branch)+`<tr class="sum"><td>รวม</td><td></td><td class="n">${fmt(usage,usage%1?2:0)}</td><td class="n">${fmt(R.full)}</td></tr>`;
+  $("wBranch").textContent=TARIFF[c.branch].name;
+  const rawAvg=usage>0?R.full/usage:0;
+  $("wAvg").innerHTML=`${fmt(R.full)} <span class="lbl">บาท</span> ÷ ${fmt(usage,usage%1?2:0)} <span class="lbl">ลบ.ม.</span> = ${rawAvg.toFixed(4)} <span class="lbl">→ ปัด 2 ตำแหน่ง</span> <span class="key">${fmt(R.avg)}</span> <span class="lbl">บาท/ลบ.ม.</span>`;
+  $("wDisc").innerHTML=R.lv>=0
+    ?`<span class="lbl">น้ำส่วนเกิน</span> (${fmt(usage,usage%1?2:0)} − ${fmt(c.base)}) = ${fmt(R.excessU)} <span class="lbl">ลบ.ม.</span><br>${fmt(R.excessU)} × <span class="key">${fmt(R.avg)}</span> × ${R.pct*100}% <span class="lbl">(ระดับ ${R.lv+1})</span> = <span class="res">${fmt(R.disc)} บาท</span><br><span class="lbl">ราคาน้ำส่วนเพิ่มสุทธิ</span> ${fmt(R.avg)} × (1 − ${R.pct*100}%) = ${fmt(R.netPerUnit)} <span class="lbl">บาท/ลบ.ม.</span>`
+    :`<span class="lbl">ยังไม่ถึงเกณฑ์ — ต้องใช้น้ำรวมอย่างน้อย</span> ${fmt(thresholds(c.base)[0].total)} <span class="lbl">ลบ.ม. ส่วนลด = 0</span>`;
+  $("tiers").innerHTML=`<tr><th>ระดับ</th><th>ยอดรวมขั้นต่ำ</th><th>ลด</th><th>ส่วนลดที่เกณฑ์</th></tr>`+
+    `<tr${R.lv<0?' class="hit"':''}><td>ฐานเดิม</td><td class="n">${fmt(c.base)}</td><td class="n">0%</td><td class="n">–</td></tr>`+
+    th.map((t,i)=>`<tr${R.lv===i?' class="hit"':''}><td>${i+1} (+${t.inc*100}%)</td><td class="n">${fmt(t.total)}</td><td class="n">${t.pct*100}%</td><td class="n">${fmt(calc(c,t.total).disc)}</td></tr>`).join("");
+
+  const cmp=$("compare");
+  if(R.lv>=0){
+    if(c.letterRate && Math.abs(c.letterRate-R.avg)>=0.005){
+      cmp.innerHTML=`หมายเหตุ: ตัวอย่างในหนังสือฉบับที่ ${c.doc} ใช้ราคาเฉลี่ย ${fmt(c.letterRate)} บาท (คำนวณที่ ${fmt(c.example,0)} ลบ.ม.) ถ้าใช้ค่านี้ส่วนลดจะเป็น <b>${fmt(R.letterDisc)}</b> บาท`; cmp.hidden=false;
+    } else cmp.hidden=true;
+  } else cmp.hidden=true;
+
+  $("summary").value=summaryText(c,usage,R);
+}
+
+function stepRows(units,branch){
+  const t=TARIFF[branch];
+  if(units<=t.min.units) return `<tr><th>อัตราค่าน้ำ</th><th>จำนวนเงิน</th></tr><tr><td>ไม่เกิน ${t.min.units} หน่วย (ขั้นต่ำ)</td><td class="n">${fmt(t.min.price)}</td></tr>`;
+  let left=units,from=0,rows=`<tr><th>อัตราค่าน้ำ</th><th>หน่วยละ</th><th>หน่วยน้ำ</th><th>จำนวนเงิน</th></tr>`;
+  for(const [w,p] of t.steps){const u=Math.min(left,w);const to=w===Infinity?"ขึ้นไป":fmt(from+w,0);
+    rows+=`<tr><td>${fmt(from===0?0:from+1,0)} – ${to}</td><td class="n">${fmt(p)}</td><td class="n">${fmt(u,u%1?2:0)}</td><td class="n">${fmt(r2(u*p))}</td></tr>`;
+    left-=u;from+=w;if(left<=0)break;}
+  return rows;
+}
+function summaryText(c,usage,R){
+  const lines=[`${c.name}${c.custom?"":` (ทะเบียน ${c.ar} มิเตอร์ ${c.meter})`}`,
+    `รอบบิลพฤศจิกายน 2569 · ฐานเดิม ${fmt(c.base)} ลบ.ม.`,
+    `ยอดใช้น้ำ ${fmt(usage)} ลบ.ม. เกินฐาน ${fmt(R.excessU)} ลบ.ม.`];
+  if(R.lv>=0){lines.push(`ได้ส่วนลดระดับ ${R.lv+1} ลด ${R.pct*100}% เฉพาะค่าน้ำส่วนเกิน`,
+    `ส่วนลด ${fmt(R.disc)} บาท (ก่อน VAT)`,`ยอดชำระประมาณ ${fmt(R.totalAfter)} บาท จากปกติ ${fmt(R.totalBefore)} บาท (รวม VAT)`);}
+  else{const n=thresholds(c.base)[0];lines.push(`ยังไม่ถึงเกณฑ์ ต้องใช้น้ำรวมอย่างน้อย ${fmt(n.total)} ลบ.ม. จึงได้ส่วนลด 30%`);}
+  return lines.join("\n");
+}
+
+$("copyBtn").onclick=()=>{
+  const t=$("summary").value, ok=()=>{$("copied").hidden=false;setTimeout(()=>$("copied").hidden=true,1800)};
+  try{navigator.clipboard.writeText(t).then(ok,()=>{$("summary").hidden=false;$("summary").select()})}
+  catch(e){$("summary").hidden=false;$("summary").select()}
+};
+function selectCustomer(){
+  const c=current(); renderInfo(c);
+  $("usage").value=c.example??Math.ceil(c.base*1.2);
+  $("usageHint").textContent=""; render();
+}
+sel.onchange=selectCustomer;
+["usage","cBase"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="cBase")renderInfo(current());render()}));
+["cBranch","cFee"].forEach(id=>$(id).addEventListener("change",()=>{renderInfo(current());render()}));
+selectCustomer();
+}
+
+
+/* ===== ตั้งค่าการเข้าสู่ระบบ Microsoft 365 (ชุดเดียวกับแดชบอร์ดยอดขายน้ำ) ===== */
+const AUTH = {
+  clientId: "75b5084b-4823-4a13-bb79-d47af910fb21",
+  tenantId: "54cf0b45-7b5b-41b0-bbeb-dddef5eae512",
+  groupId:  "1512fedb-c62b-43b4-889c-3be09db226dc",   // กลุ่มที่ใช้งานได้ (เปลี่ยนเป็นกลุ่มฝ่ายขายได้)
+  groupName: "wms_dashboard_viewers",
+  redirectUri: location.origin + location.pathname.replace(/index\.html$/, ''),   // https://prapaphuket.github.io/wms-dashboard/discount/
+  keyShareUrl: "https://sevenutilitiesandpower.sharepoint.com/:t:/g/IQAxOo-aQxB0QIxQN5-kt2u-AXHJ5E6bfDWeZohEIM_PRoU?e=kpbGSi"   // ไฟล์กุญแจ wms-key.txt
+};
+const SCOPES = ["User.Read", "Files.Read.All"];
+const ENC = /*ENC*/{"i": "hsR55B+Wv73AoOXo", "c": "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"}/*/ENC*/;
+(function () {
+  const b = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const go = document.getElementById('go'), out = document.getElementById('out'), err = document.getElementById('err');
+  const busy = (t) => { go.disabled = true; go.textContent = t; };
+  const fail = (t, app) => { err.textContent = t; go.disabled = false; go.textContent = 'เข้าสู่ระบบด้วย Microsoft 365'; if (app) { out.hidden = false; out.onclick = () => app.logoutRedirect(); } };
+  if (!ENC) { fail('หน้านี้ยังไม่มีข้อมูลลูกค้า — รัน encrypt.py ก่อนอัปโหลด'); go.disabled = true; return; }
+  if (!window.msal) { fail('โหลดระบบเข้าสู่ระบบ Microsoft ไม่ได้ ตรวจอินเทอร์เน็ตแล้วรีเฟรชหน้า'); go.disabled = true; return; }
+  if (!window.crypto || !crypto.subtle) { fail('เบราว์เซอร์นี้เปิดหน้านี้ไม่ได้ ลองเปิดด้วย Chrome, Edge หรือ Safari'); go.disabled = true; return; }
+  const app = new msal.PublicClientApplication({
+    auth: { clientId: AUTH.clientId, authority: 'https://login.microsoftonline.com/' + AUTH.tenantId, redirectUri: AUTH.redirectUri },
+    cache: { cacheLocation: 'sessionStorage' }
+  });
+  const login = () => app.loginRedirect({ scopes: SCOPES, prompt: 'select_account' });
+  const shareId = (u) => 'u!' + btoa(unescape(encodeURIComponent(u))).replace(/=+$/, '').replace(/\//g, '_').replace(/\+/g, '-');
+  async function token(account) {
+    try { return (await app.acquireTokenSilent({ scopes: SCOPES, account })).accessToken; }
+    catch (e) { if (e instanceof msal.InteractionRequiredAuthError) { await app.acquireTokenRedirect({ scopes: SCOPES, account }); return null; } throw e; }
+  }
+  async function fetchKey(tok) {
+    const base = 'https://graph.microsoft.com/v1.0/shares/' + shareId(AUTH.keyShareUrl) + '/driveItem';
+    const H = { headers: { Authorization: 'Bearer ' + tok } };
+    const r = await fetch(base, H);
+    if (r.status === 401 || r.status === 403 || r.status === 404) throw new Error('nokey');
+    if (!r.ok) throw new Error('graph ' + r.status);
+    const item = await r.json();
+    let txt = null;
+    const dl = item['@microsoft.graph.downloadUrl'] || item['@content.downloadUrl'];
+    if (dl) { try { const k = await fetch(dl); if (k.ok) txt = await k.text(); } catch (e) {} }
+    if (txt === null && item.id && item.parentReference && item.parentReference.driveId) {
+      const k = await fetch('https://graph.microsoft.com/v1.0/drives/' + item.parentReference.driveId + '/items/' + item.id + '/content', H);
+      if (k.ok) txt = await k.text();
+    }
+    if (txt === null) { const k = await fetch(base + '/content', H); if (!k.ok) throw new Error('download ' + k.status); txt = await k.text(); }
+    return txt.replace(/^\uFEFF/, '').trim();
+  }
+  async function unlock(raw) {
+    const key = await crypto.subtle.importKey('raw', b(raw), 'AES-GCM', false, ['decrypt']);
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(ENC.i) }, key, b(ENC.c));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+  window.__unlock = unlock;   // used only by local tests
+  async function open(account) {
+    const c = account.idTokenClaims || {};
+    if (c.tid && c.tid !== AUTH.tenantId) return fail('บัญชีนี้ไม่ได้อยู่ในองค์กร', app);
+    if (AUTH.groupId && !(c.groups || []).includes(AUTH.groupId)) return fail('บัญชีนี้ยังไม่มีสิทธิ์ใช้งาน (ต้องอยู่ในกลุ่ม ' + AUTH.groupName + ') — ติดต่อฝ่าย IT', app);
+    busy('กำลังเปิด…');
+    try {
+      const tok = await token(account); if (!tok) return;
+      const rows = await unlock(await fetchKey(tok));
+      document.getElementById('lock').hidden = true;
+      document.getElementById('dash-root').hidden = false;
+      document.getElementById('who').textContent = account.name || account.username || '';
+      document.getElementById('userbar').hidden = false;
+      document.getElementById('logout').onclick = () => app.logoutRedirect({ account });
+      boot(rows);
+    } catch (x) {
+      console.error(x);
+      fail(x && x.message === 'nokey' ? 'บัญชีนี้ยังไม่ได้รับสิทธิ์อ่านไฟล์กุญแจใน SharePoint — ติดต่อฝ่าย IT'
+         : x && x.name === 'OperationError' ? 'ไฟล์กุญแจใน SharePoint ไม่ตรงกับหน้านี้ — ติดต่อฝ่าย IT'
+         : 'เปิดไม่สำเร็จ (' + ((x && (x.errorCode || x.message)) || 'ไม่ทราบสาเหตุ') + ') ลองรีเฟรชหน้า', app);
+    }
+  }
+  (async () => {
+    try {
+      await app.initialize();
+      const resp = await app.handleRedirectPromise();
+      const account = (resp && resp.account) || app.getAllAccounts()[0];
+      go.onclick = login;
+      if (account) { app.setActiveAccount(account); await open(account); }
+      else { go.disabled = false; go.textContent = 'เข้าสู่ระบบด้วย Microsoft 365'; }
+    } catch (x) { console.error(x); go.onclick = login; fail('เข้าสู่ระบบไม่สำเร็จ (' + (x.errorCode || x.message) + ')'); }
+  })();
+})();
+</script>
+<script>
+(function () {
+  const root = document.documentElement, KEY = 'hea-discount-theme';
+  let saved = 'auto'; try { saved = localStorage.getItem(KEY) || 'auto'; } catch (e) {}
+  const btns = document.querySelectorAll('.themeseg button');
+  const apply = (t) => {
+    if (t === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
+    try { localStorage.setItem(KEY, t); } catch (e) {}
+  };
+  btns.forEach((b) => b.addEventListener('click', () => apply(b.dataset.t)));
+  apply(saved);
+})();
+</script>
+</body>
+</html>
